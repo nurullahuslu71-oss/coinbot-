@@ -444,7 +444,7 @@ if CHAT_ID:
         counter += 1
         time.sleep(900)
 else:
-    Starting Container
+
 TypeError: string indices must be integers, not 'str'
 Exception in thread Thread-1 (watch_top3_funding):
 Top 3 funding takibi basliyor...
