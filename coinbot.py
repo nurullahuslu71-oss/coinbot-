@@ -5,7 +5,7 @@ import time
 import threading
 
 TOKEN = "8670345190:AAHW94nVpiiaKCoiNjRCgiiFkvDYzMHmDKs"
-CHAT_ID = ""
+CHAT_ID = "7390678020"
 
 def send(text):
     url = "https://api.telegram.org/bot" + TOKEN + "/sendMessage"
