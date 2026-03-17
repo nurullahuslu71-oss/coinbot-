@@ -1,5 +1,3 @@
-
-
 import requests
 import time
 import threading
@@ -113,24 +111,6 @@ def get_vol(volumes):
     avg = sum(volumes[:-10]) / len(volumes[:-10])
     recent = sum(volumes[-5:]) / 5
     return (recent - avg) / avg * 100
-
-def get_patterns(opens, highs, lows, closes):
-    patterns = []
-    o, h, l, c = opens[-1], highs[-1], lows[-1], closes[-1]
-    body = abs(c - o)
-    lower_wick = min(o, c) - l
-    total = h - l
-    if total == 0:
-        return patterns
-    if lower_wick > body * 2 and c > o:
-        patterns.append("Hammer")
-    if body < total * 0.1:
-        patterns.append("Doji")
-    if c > o and body > total * 0.7:
-        patterns.append("Guclu Yesil Mum")
-    if lows[-1] > lows[-5] and highs[-1] < highs[-5]:
-        patterns.append("Ucgen")
-    return patterns
 
 def get_whale_activity(symbol):
     url = "https://fapi.binance.com/fapi/v1/trades?symbol=" + symbol + "&limit=100"
@@ -259,14 +239,6 @@ def get_heatmap(closes, volumes):
     else:
         return "SOGUK"
 
-def get_signal_color(score):
-    if score >= 15:
-        return "GUCLU"
-    elif score >= 10:
-        return "ORTA"
-    else:
-        return "ZAYIF"
-
 def analyze_coin(symbol, interval):
     opens, highs, lows, closes, volumes = get_klines(symbol, interval)
     r = rsi(closes)
@@ -279,7 +251,6 @@ def analyze_coin(symbol, interval):
     sup, res, potential, dist_sup = get_support_resistance(highs, lows, closes)
     bb = get_bollinger(closes)
     vol = get_vol(volumes)
-    patterns = get_patterns(opens, highs, lows, closes)
     e9 = ema(closes, 9)
     e21 = ema(closes, 21)
     whale_buy, whale_sell = get_whale_activity(symbol)
@@ -347,208 +318,101 @@ def analyze_coin(symbol, interval):
     if mrd == "LONG":
         score += 3
         reasons.append("MrD LONG sinyali")
-    for p in patterns:
-        score += 1
-        reasons.append(p)
     return score, reasons, round(r, 1), round(f, 4), round(oi, 1), round(potential, 1), round(vol, 1), mrd, heatmap
 
 def scan_timeframe(interval, label):
     print("Taraniyor: " + label)
-    url = "https://fapi.binance.com/fapi/v1/ticker/24hr"
-    r = requests.get(url, timeout=10)
-    all_coins = r.json()
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-    top = sorted(top, key=lambda x: float(x["quoteVolume"]), reverse=True)[:60]
-    results = []
-    for coin in top:
-        symbol = coin["symbol"]
-        try:
-            score, reasons, r_val, f_val, oi_val, pot, vol, mrd, heatmap = analyze_coin(symbol, interval)
-            if score >= 7 and mrd == "LONG":
-                results.append({"Coin": symbol, "Skor": score, "RSI": r_val, "Funding": f_val, "OI": oi_val, "Potential": pot, "Vol": vol, "Reasons": reasons, "MrD": mrd, "Heatmap": heatmap})
-        except:
-            continue
-    results = sorted(results, key=lambda x: x["Skor"], reverse=True)
     try:
-        fg_val, fg_label = get_fear_greed()
-        fg_msg = "Korku/Acgozluluk: " + str(fg_val) + " (" + fg_label + ")\n\n"
-    except:
-        fg_msg = ""
-    if not results:
-        send(label + " - Guclu LONG sinyali bulunamadi.\n" + fg_msg)
-        return
-    msg = label + " YUKSELECEK COINLER\n" + fg_msg
-    for idx, res in enumerate(results[:5], 1):
-        color = get_signal_color(res["Skor"])
-        msg += color + " #" + str(idx) + " " + res["Coin"] + " | Skor: " + str(res["Skor"]) + "/33\n"
-        msg += "Heatmap: " + res["Heatmap"] + "\n"
-        msg += "MrD: " + res["MrD"] + "\n"
-        msg += "RSI: " + str(res["RSI"]) + " | Funding: " + str(res["Funding"]) + "%\n"
-        msg += "OI: +" + str(res["OI"]) + "% | Hedef: +%" + str(res["Potential"]) + "\n"
-        msg += ", ".join(res["Reasons"][:4]) + "\n\n"
-    msg += "Yatirim tavsiyesi degildir!"
-    send(msg)
+        url = "https://fapi.binance.com/fapi/v1/ticker/24hr"
+        r = requests.get(url, timeout=10)
+        all_coins = r.json()
+        if not isinstance(all_coins, list):
+            return
+        top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+        top = sorted(top, key=lambda x: float(x["quoteVolume"]), reverse=True)[:60]
+        results = []
+        for coin in top:
+            symbol = coin["symbol"]
+            try:
+                score, reasons, r_val, f_val, oi_val, pot, vol, mrd, heatmap = analyze_coin(symbol, interval)
+                if score >= 7 and mrd == "LONG":
+                    results.append({"Coin": symbol, "Skor": score, "RSI": r_val, "Funding": f_val, "OI": oi_val, "Potential": pot, "Reasons": reasons, "Heatmap": heatmap})
+            except:
+                continue
+        results = sorted(results, key=lambda x: x["Skor"], reverse=True)
+        try:
+            fg_val, fg_label = get_fear_greed()
+            fg_msg = "Korku/Acgozluluk: " + str(fg_val) + " (" + fg_label + ")\n\n"
+        except:
+            fg_msg = ""
+        if not results:
+            send(label + " - Guclu sinyal bulunamadi.\n" + fg_msg)
+            return
+        msg = label + " YUKSELECEK COINLER\n" + fg_msg
+        for idx, res in enumerate(results[:5], 1):
+            if res["Skor"] >= 15:
+                color = "GUCLU"
+            elif res["Skor"] >= 10:
+                color = "ORTA"
+            else:
+                color = "ZAYIF"
+            msg += color + " #" + str(idx) + " " + res["Coin"] + " Skor: " + str(res["Skor"]) + "/33\n"
+            msg += "Heatmap: " + res["Heatmap"] + "\n"
+            msg += "RSI: " + str(res["RSI"]) + " Funding: " + str(res["Funding"]) + "%\n"
+            msg += "OI: +" + str(res["OI"]) + "% Hedef: +%" + str(res["Potential"]) + "\n"
+            msg += ", ".join(res["Reasons"][:4]) + "\n\n"
+        msg += "Yatirim tavsiyesi degildir!"
+        send(msg)
+    except Exception as e:
+        print("Hata: " + str(e))
 
 def get_top3_daily():
     url = "https://fapi.binance.com/fapi/v1/ticker/24hr"
     r = requests.get(url, timeout=10)
     data = r.json()
+    if not isinstance(data, list):
+        return []
     filtered = [c for c in data if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 50000000]
     sorted_coins = sorted(filtered, key=lambda x: float(x["priceChangePercent"]), reverse=True)
     return [c["symbol"] for c in sorted_coins[:3]]
 
 def watch_top3_funding():
     print("Top 3 funding takibi basliyor...")
-    top3 = get_top3_daily()
-    send("Gunun Top 3 Coini: " + ", ".join(top3) + " Dakikalik funding takibi basliyor!")
-    prev_funding = {}
-    while True:
-        for symbol in top3:
-            try:
-                f = get_funding(symbol)
-                prev = prev_funding.get(symbol, 0)
-                if f < -0.01 and prev >= -0.01:
-                    send("FUNDING ALARM! " + symbol + " Funding negatife dondu: " + str(round(f, 4)) + "% Yukselis sinyali!")
-                elif f < prev - 0.02:
-                    send("FUNDING DUSIYOR! " + symbol + " Funding: " + str(round(f, 4)) + "% Guclu yukselis bekleniyor!")
-                prev_funding[symbol] = f
-            except:
-                continue
-        time.sleep(60)
+    try:
+        top3 = get_top3_daily()
+        if top3:
+            send("Gunun Top 3 Coini: " + ", ".join(top3))
+        prev_funding = {}
+        while True:
+            for symbol in top3:
+                try:
+                    f = get_funding(symbol)
+                    prev = prev_funding.get(symbol, 0)
+                    if f < -0.01 and prev >= -0.01:
+                        send("FUNDING ALARM! " + symbol + " Funding: " + str(round(f, 4)) + "% Yukselis sinyali!")
+                    elif f < prev - 0.02:
+                        send("FUNDING DUSIYOR! " + symbol + " Funding: " + str(round(f, 4)) + "%")
+                    prev_funding[symbol] = f
+                except:
+                    continue
+            time.sleep(60)
+    except Exception as e:
+        print("Funding hata: " + str(e))
 
-def get_chat_id():
-    url = "https://api.telegram.org/bot" + TOKEN + "/getUpdates"
-    r = requests.get(url)
-    data = r.json()
-    if data["result"]:
-        return str(data["result"][-1]["message"]["chat"]["id"])
-    return None
+send("Bot aktif! Tarama basliyor...")
+t = threading.Thread(target=watch_top3_funding)
+t.daemon = True
+t.start()
 
-CHAT_ID = get_chat_id()
-if CHAT_ID:
-    print("Chat ID bulundu: " + CHAT_ID)
-    send("Bot aktif! Tarama basliyor...")
-    t = threading.Thread(target=watch_top3_funding)
-    t.daemon = True
-    t.start()
-    counter = 0
-    while True:
-        scan_timeframe("15m", "15 DAKIKALIK")
-        time.sleep(10)
-        scan_timeframe("1h", "1 SAATLIK")
-        time.sleep(10)
-        scan_timeframe("4h", "4 SAATLIK")
-        time.sleep(10)
-        if counter % 6 == 0:
-            scan_timeframe("1d", "GUNLUK")
-        counter += 1
-        time.sleep(900)
-else:
-
-TypeError: string indices must be integers, not 'str'
-Exception in thread Thread-1 (watch_top3_funding):
-Top 3 funding takibi basliyor...
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
-Taraniyor: 15 DAKIKALIK
-    self.run()
-  File "/usr/local/lib/python3.11/threading.py", line 982, in run
-Traceback (most recent call last):
-    self._target(*self._args, **self._kwargs)
-  File "/app/coinbot.py", line 402, in watch_top3_funding
-  File "/app/coinbot.py", line 436, in <module>
-    top3 = get_top3_daily()
-           ^^^^^^^^^^^^^^^^
+counter = 0
+while True:
     scan_timeframe("15m", "15 DAKIKALIK")
-  File "/app/coinbot.py", line 396, in get_top3_daily
-  File "/app/coinbot.py", line 360, in scan_timeframe
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-    filtered = [c for c in data if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 50000000]
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/coinbot.py", line 396, in <listcomp>
-  File "/app/coinbot.py", line 360, in <listcomp>
-    filtered = [c for c in data if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 50000000]
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-                                   ~^^^^^^^^^^
-TypeError: string indices must be integers, not 'str'
-                                   ~^^^^^^^^^^
-Chat ID bulundu: 7390678020
-Chat ID bulundu: 7390678020
-Top 3 funding takibi basliyor...
-Taraniyor: 15 DAKIKALIK
-Traceback (most recent call last):
-  File "/app/coinbot.py", line 436, in <module>
-Exception in thread Thread-1 (watch_top3_funding):
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
-    scan_timeframe("15m", "15 DAKIKALIK")
-  File "/app/coinbot.py", line 360, in scan_timeframe
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/coinbot.py", line 360, in <listcomp>
-    self.run()
-  File "/usr/local/lib/python3.11/threading.py", line 982, in run
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-                                   ~^^^^^^^^^^
-TypeError: string indices must be integers, not 'str'
-Chat ID bulundu: 7390678020
-Top 3 funding takibi basliyor...
-Taraniyor: 15 DAKIKALIK
-Traceback (most recent call last):
-  File "/app/coinbot.py", line 436, in <module>
-    scan_timeframe("15m", "15 DAKIKALIK")
-  File "/app/coinbot.py", line 360, in scan_timeframe
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/coinbot.py", line 360, in <listcomp>
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-                                   ~^^^^^^^^^^
-TypeError: string indices must be integers, not 'str'
-Chat ID bulundu: 7390678020
-Top 3 funding takibi basliyor...
-Taraniyor: 15 DAKIKALIK
-Traceback (most recent call last):
-  File "/app/coinbot.py", line 436, in <module>
-    scan_timeframe("15m", "15 DAKIKALIK")
-  File "/app/coinbot.py", line 360, in scan_timeframe
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/coinbot.py", line 360, in <listcomp>
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-                                   ~^^^^^^^^^^
-TypeError: string indices must be integers, not 'str'
-Chat ID bulundu: 7390678020
-Top 3 funding takibi basliyor...
-Taraniyor: 15 DAKIKALIK
-Traceback (most recent call last):
-  File "/app/coinbot.py", line 436, in <module>
-    scan_timeframe("15m", "15 DAKIKALIK")
-  File "/app/coinbot.py", line 360, in scan_timeframe
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/coinbot.py", line 360, in <listcomp>
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-                                   ~^^^^^^^^^^
-TypeError: string indices must be integers, not 'str'
-Exception in thread Thread-1 (watch_top3_funding):
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
-    self.run()
-  File "/usr/local/lib/python3.11/threading.py", line 982, in run
-    self._target(*self._args, **self._kwargs)
-  File "/app/coinbot.py", line 402, in watch_top3_funding
-    top3 = get_top3_daily()
-           ^^^^^^^^^^^^^^^^
-  File "/app/coinbot.py", line 396, in get_top3_daily
-    filtered = [c for c in data if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 50000000]
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/coinbot.py", line 396, in <listcomp>
-    filtered = [c for c in data if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 50000000]
-                                   ~^^^^^^^^^^
-TypeError: string indices must be integers, not 'str'
-Chat ID bulundu: 7390678020
-    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
-Top 3 funding takibi basliyor...
-                                   ~^^^^^^^^^^
-Taraniyor: 15 DAKIKALIK
+    time.sleep(10)
+    scan_timeframe("1h", "1 SAATLIK")
+    time.sleep(10)
+    scan_timeframe("4h", "4 SAATLIK")
+    time.sleep(10)
+    if counter % 6 == 0:
+        scan_timeframe("1d", "GUNLUK")
+    counter += 1
+    time.sleep(900)
