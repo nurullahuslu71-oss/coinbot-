@@ -1,1 +1,1 @@
-work: python coinbot2.py
+work: python coinbot.py
