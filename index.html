@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚀 Kripto Sinyal</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0f; color: #fff; font-family: 'Courier New', monospace; padding: 15px; }
+h1 { text-align: center; color: #00ff88; font-size: 24px; margin-bottom: 5px; }
+.subtitle { text-align: center; color: #444; font-size: 13px; margin-bottom: 15px; }
+.top-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; max-width: 800px; margin: 0 auto 20px; }
+.top-card { background: #111; border: 1px solid #222; border-radius: 10px; padding: 12px; text-align: center; }
+.top-card-label { font-size: 11px; color: #555; margin-bottom: 5px; }
+.top-card-value { font-size: 16px; font-weight: bold; }
+.fear-low { color: #ff4444; }
+.fear-mid { color: #ffff00; }
+.fear-high { color: #00ff88; }
+.trend-section { max-width: 800px; margin: 0 auto 20px; }
+.trend-title { color: #555; font-size: 13px; margin-bottom: 10px; }
+.trend-coins { display: flex; gap: 8px; flex-wrap: wrap; }
+.trend-coin { background: #111; border: 1px solid #333; border-radius: 6px; padding: 5px 10px; font-size: 12px; color: #00ff88; }
+.legend { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+.legend-item { background: #111; border: 1px solid #222; border-radius: 6px; padding: 5px 12px; font-size: 12px; }
+.btn { display: block; margin: 0 auto 20px; background: #00ff88; color: #000; border: none; padding: 12px 40px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+.btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+.cards { display: grid; gap: 15px; max-width: 800px; margin: 0 auto; }
+.card { border-radius: 12px; padding: 15px; }
+.card.guclu { background: #0d2b1a; border: 1px solid #00ff88; }
+.card.orta { background: #2b2500; border: 1px solid #ffff00; }
+.card.zayif { background: #2b0d0d; border: 1px solid #ff4444; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.coin-name { font-size: 20px; font-weight: bold; }
+.guclu .coin-name { color: #00ff88; }
+.orta .coin-name { color: #ffff00; }
+.zayif .coin-name { color: #ff4444; }
+.score { font-size: 22px; font-weight: bold; }
+.heatmap { font-size: 13px; color: #aaa; margin-bottom: 10px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.stat { background: #111; border-radius: 8px; padding: 8px; text-align: center; }
+.stat-label { font-size: 10px; color: #555; margin-bottom: 3px; }
+.stat-value { font-size: 13px; font-weight: bold; }
+.green { color: #00ff88; }
+.red { color: #ff4444; }
+.yellow { color: #ffff00; }
+.gray { color: #aaa; }
+.change { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 5px; }
+.loading { text-align: center; padding: 40px; color: #00ff88; }
+.empty { text-align: center; padding: 40px; color: #555; }
+.footer { text-align: center; margin-top: 30px; color: #333; font-size: 12px; }
+.last-update { text-align: center; color: #333; font-size: 12px; margin-bottom: 15px; }
+.reasons { font-size: 11px; color: #666; margin-top: 5px; }
+.mrd-tag { display: inline-block; background: #00ff8822; color: #00ff88; border: 1px solid #00ff8844; border-radius: 4px; padding: 2px 8px; font-size: 11px; margin-left: 5px; }
+@media (max-width: 500px) { .stats { grid-template-columns: 1fr 1fr; } .top-stats { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>🚀 KRİPTO SİNYAL</h1>
+<p class="subtitle">Binance Futures + CoinGecko • Gerçek Zamanlı Analiz</p>
+
+<div class="top-stats">
+  <div class="top-card"><div class="top-card-label">😱 Korku/Açgözlülük</div><div class="top-card-value" id="fearValue">Yükleniyor...</div></div>
+  <div class="top-card"><div class="top-card-label">₿ Bitcoin Dominans</div><div class="top-card-value" id="btcDom">Yükleniyor...</div></div>
+  <div class="top-card"><div class="top-card-label">🌍 Toplam Piyasa</div><div class="top-card-value" id="totalMarket">Yükleniyor...</div></div>
+</div>
+
+<div class="trend-section">
+  <div class="trend-title">🔥 Trend Coinler (CoinGecko)</div>
+  <div class="trend-coins" id="trendCoins">Yükleniyor...</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item green">🟢 Güçlü</div>
+  <div class="legend-item yellow">🟡 Orta</div>
+  <div class="legend-item red">🔴 Zayıf</div>
+</div>
+
+<div id="lastUpdate" class="last-update"></div>
+<button class="btn" id="scanBtn" onclick="scan()">🔍 Tara</button>
+<div id="results" class="cards"></div>
+<div class="footer">⚠️ Bu site yatırım tavsiyesi değildir.</div>
+
+<script>
+const BINANCE = "https://fapi.binance.com";
+const COINGECKO = "https://api.coingecko.com/api/v3";
+const FEARGREED = "https://api.alternative.me/fng/?limit=1";
+
+async function loadMarketData() {
+  try {
+    let fg = await fetch(FEARGREED);
+    let fgData = await fg.json();
+    let fgVal = parseInt(fgData.data[0].value);
+    let fgLabel = fgData.data[0].value_classification;
+    let fgEl = document.getElementById("fearValue");
+    fgEl.textContent = fgVal + " - " + fgLabel;
+    fgEl.className = "top-card-value " + (fgVal < 30 ? "fear-low" : fgVal < 60 ? "fear-mid" : "fear-high");
+  } catch(e) { document.getElementById("fearValue").textContent = "N/A"; }
+
+  try {
+    let gm = await fetch(COINGECKO + "/global");
+    let gmData = await gm.json();
+    let btcDom = gmData.data.market_cap_percentage.btc.toFixed(1);
+    let totalMcap = (gmData.data.total_market_cap.usd / 1e12).toFixed(2);
+    document.getElementById("btcDom").textContent = btcDom + "%";
+    document.getElementById("btcDom").className = "top-card-value yellow";
+    document.getElementById("totalMarket").textContent = "$" + totalMcap + "T";
+    document.getElementById("totalMarket").className = "top-card-value green";
+  } catch(e) {}
+
+  try {
+    let tr = await fetch(COINGECKO + "/search/trending");
+    let trData = await tr.json();
+    document.getElementById("trendCoins").innerHTML = trData.coins.slice(0,7).map(c =>
+      <div class="trend-coin">🔥 ${c.item.symbol.toUpperCase()}</div>
+    ).join("");
+  } catch(e) { document.getElementById("trendCoins").textContent = "Yüklenemedi"; }
+}
+
+function calcRSI(closes) {
+  let gains = [], losses = [];
+  for (let i = 1; i < closes.length; i++) {
+    let d = closes[i] - closes[i-1];
+    gains.push(Math.max(d, 0));
+    losses.push(Math.max(-d, 0));
+  }
+  let ag = gains.slice(-14).reduce((a,b)=>a+b,0)/14;
+  let al = losses.slice(-14).reduce((a,b)=>a+b,0)/14;
+  if (al === 0) return 100;
+  return 100 - 100/(1+ag/al);
+}
+
+function calcEMA(closes, period) {
+  let k = 2/(period+1), val = closes[0];
+  for (let c of closes.slice(1)) val = c*k + val*(1-k);
+  return val;
+}
+
+function calcCVD(closes, volumes) {
+  let cvd = 0;
+  for (let i = 1; i < closes.length; i++)
+    cvd += closes[i] > closes[i-1] ? volumes[i] : -volumes[i];
+  return cvd;
+}
+
+function calcFVG(highs, lows) {
+  for (let i = 2; i < lows.length; i++)
+    if (lows[i] > highs[i-2]) return true;
+  return false;
+}
+
+function calcVol(volumes) {
+  let avg = volumes.slice(0,-5).reduce((a,b)=>a+b,0)/(volumes.length-5);
+  let recent = volumes.slice(-5).reduce((a,b)=>a+b,0)/5;
+  return (recent-avg)/avg*100;
+}
+
+function getHeatmap(closes, volumes) {
+  let avg = volumes.slice(-20).reduce((a,b)=>a+b,0)/20;
+  let ratio = volumes[volumes.length-1]/avg;
+  let change = (closes[closes.length-1]-closes[closes.length-6])/closes[closes.length-6]*100;
+  if (ratio > 2 && change > 3) return "🔥🔥🔥 ÇOK SICAK";
+  if (ratio > 1.5 && change > 1) return "🔥🔥 SICAK";
+  if (ratio > 1.2) return "🔥 ILIMI";
+  if (change < -3) return "🧊🧊 ÇOK SOĞUK";
+  return "❄️ SOĞUK";
+}
+
+async function fetchKlines(symbol) {
+  let r = await fetch(BINANCE+"/fapi/v1/klines?symbol="+symbol+"&interval=1h&limit=100");
+  let d = await r.json();
+  return {
+    highs: d.map(x=>parseFloat(x[2])),
+    lows: d.map(x=>parseFloat(x[3])),
+    closes: d.map(x=>parseFloat(x[4])),
+    volumes: d.map(x=>parseFloat(x[5]))
+  };
+}
+
+async function fetchFunding(symbol) {
+  let r = await fetch(BINANCE+"/fapi/v1/fundingRate?symbol="+symbol+"&limit=1");
+  let d = await r.json();
+  return d.length ? parseFloat(d[0].fundingRate)*100 : 0;
+}
+
+async function analyzeSymbol(symbol) {
+  let {highs, lows, closes, volumes} = await fetchKlines(symbol);
+  let rsi = calcRSI(closes);
+  let cvd = calcCVD(closes, volumes);
+  let fvg = calcFVG(highs, lows);
+  let vol = calcVol(volumes);
+  let funding = await fetchFunding(symbol);
+  let heatmap = getHeatmap(closes, volumes);
+  let e9 = calcEMA(closes, 9);
+  let e21 = calcEMA(closes, 21);
+  let sortedHighs = [...highs.slice(-20)].sort((a,b)=>b-a);
+  let resistance = (sortedHighs[0]+sortedHighs[1]+sortedHighs[2])/3;
+  let potential = (resistance - closes[closes.length-1])/closes[closes.length-1]*100;
+  let score = 0, reasons = [], mrd = "NOTR";
+
+  if (rsi < 35) { score += 4; reasons.push("RSI aşırı satım "+rsi.toFixed(1)); }
+  else if (rsi < 45) { score += 2; reasons.push("RSI düşük "+rsi.toFixed(1)); }
+  if (funding < -0.05) { score += 4; reasons.push("Funding çok negatif"); }
+  else if (funding < 0) { score += 2; reasons.push("Funding negatif"); }
+  if (cvd > 0) { score += 2; reasons.push("CVD pozitif"); }
+  if (fvg) { score += 2; reasons.push("FVG tespit edildi"); }
+  if (vol > 50) { score += 3; reasons.push("Hacim patlaması +"+vol.toFixed(0)+"%"); }
+  else if (vol > 20) { score += 2; reasons.push("Hacim artıyor"); }
+  if (e9 > e21) { score += 1; reasons.push("EMA yükseliş"); }
+  if (rsi < 45 && funding < 0 && cvd > 0) { mrd = "LONG"; score += 3; reasons.push("MrD LONG sinyali"); }
+
+  return { symbol, score, rsi: rsi.toFixed(1), funding: funding.toFixed(4), cvd: cvd > 0 ? "Pozitif" : "Negatif", vol: vol.toFixed(1), heatmap, mrd, potential: potential.toFixed(1), reasons };
+}
+
+async function scan() {
+  let btn = document.getElementById("scanBtn");
+  let results = document.getElementById("results");
+  btn.disabled = true;
+  btn.textContent = "⏳ Taranıyor...";
+  results.innerHTML = '<div class="loading">⏳ Coinler taranıyor...<br><small style="color:#555;font-size:12px;margin-top:10px;display:block">1-2 dakika sürebilir</small></div>';
+
+  try {
+    let r = await fetch(BINANCE+"/fapi/v1/ticker/24hr");
+    let all = await r.json();
+    let top = all.filter(c=>c.symbol.endsWith("USDT") && parseFloat(c.quoteVolume)>30000000)
+                 .sort((a,b)=>parseFloat(b.quoteVolume)-parseFloat(a.quoteVolume))
+                 .slice(0,25);
+
+    let signals = [];
+    for (let coin of top) {
+      try {
+        let data = await analyzeSymbol(coin.symbol);
+        data.change = parseFloat(coin.priceChangePercent).toFixed(2);
+        data.price = parseFloat(coin.lastPrice).toFixed(4);
+        if (data.score >= 5) signals.push(data);
+      } catch(e) {}
+    }
+
+    signals.sort((a,b)=>b.score-a.score);
+    document.getElementById("lastUpdate").textContent = "Son güncelleme: " + new Date().toLocaleTimeString("tr-TR");
+
+    if (signals.length === 0) {
+      results.innerHTML = '<div class="empty">Şu an güçlü sinyal bulunamadı.</div>';
+    } else {
+      results.innerHTML = signals.slice(0,10).map(s => {
+        let cls = s.score >= 15 ? "guclu" : s.score >= 10 ? "orta" : "zayif";
+        let icon = s.score >= 15 ? "🟢🚀" : s.score >= 10 ? "🟡" : "🔴";
+        let rsiColor = s.rsi < 35 ? "green" : s.rsi < 45 ? "yellow" : s.rsi > 65 ? "red" : "gray";
+        let fundColor = parseFloat(s.funding) < 0 ? "green" : "red";
+        let volColor = parseFloat(s.vol) > 20 ? "green" : "gray";
+        let cvdColor = s.cvd === "Pozitif" ? "green" : "red";
+        let changeColor = parseFloat(s.change) > 0 ? "green" : "red";
+        return `
+        <div class="card ${cls}">
+          <div class="card-header">
+            <div>
+              <span style="font-size:18px">${icon}</span>
+              <span class="coin-name"> ${s.symbol}</span>
+              <span style="font-size:11px;background:#1a1a1a;padding:2px 6px;border-radius:4px;color:#aaa;margin-left:8px">$${s.price}</span>
+              ${s.mrd === "LONG" ? '<span class="mrd-tag">✅ MrD LONG</span>' : ""}
+            </div>
+            <div style="text-align:right">
+              <div class="score ${cls === 'guclu' ? 'green' : cls === 'orta' ? 'yellow' : 'red'}">${s.score}/20</div>
+              <div style="font-size:11px;color:#555">SKOR</div>
+            </div>
+          </div>
+          <div class="heatmap">${s.heatmap}</div>
+          <div class="stats">
+            <div class="stat"><div class="stat-label">RSI</div><div class="stat-value ${rsiColor}">${s.rsi}</div></div>
+            <div class="stat"><div class="stat-label">Funding</div><div class="stat-value ${fundColor}">${s.funding}%</div></div>
+            <div class="stat"><div class="stat-label">Hacim</div><div class="stat-value ${volColor}">+${s.vol}%</div></div>
+            <div class="stat"><div class="stat-label">CVD</div><div class="stat-value ${cvdColor}">${s.cvd}</div></div>
+          </div>
+          <div class="change">
+            <span>🎯 Hedef: +%${s.potential}</span>
+            <span class="${changeColor}">${parseFloat(s.change)>0?"+":""}${s.change}%</span>
+          </div>
+          <div class="reasons">${s.reasons.slice(0,4).join(" • ")}</div>
+        </div>`;
+      }).join("");
+    }
+  } catch(e) {
+    results.innerHTML = '<div class="empty">Hata oluştu. Tekrar deneyin!</div>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = "🔍 Tara";
+}
+
+loadMarketData();
+scan();
+</script>
+</body>
+</html>
