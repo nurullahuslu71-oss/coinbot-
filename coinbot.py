@@ -444,5 +444,111 @@ if CHAT_ID:
         counter += 1
         time.sleep(900)
 else:
-    print("Chat ID bulunamadi! Telegram'da bota /start yazin.")
-    time.sleep(30)
+    Starting Container
+TypeError: string indices must be integers, not 'str'
+Exception in thread Thread-1 (watch_top3_funding):
+Top 3 funding takibi basliyor...
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+Taraniyor: 15 DAKIKALIK
+    self.run()
+  File "/usr/local/lib/python3.11/threading.py", line 982, in run
+Traceback (most recent call last):
+    self._target(*self._args, **self._kwargs)
+  File "/app/coinbot.py", line 402, in watch_top3_funding
+  File "/app/coinbot.py", line 436, in <module>
+    top3 = get_top3_daily()
+           ^^^^^^^^^^^^^^^^
+    scan_timeframe("15m", "15 DAKIKALIK")
+  File "/app/coinbot.py", line 396, in get_top3_daily
+  File "/app/coinbot.py", line 360, in scan_timeframe
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+    filtered = [c for c in data if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 50000000]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/coinbot.py", line 396, in <listcomp>
+  File "/app/coinbot.py", line 360, in <listcomp>
+    filtered = [c for c in data if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 50000000]
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+                                   ~^^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+                                   ~^^^^^^^^^^
+Chat ID bulundu: 7390678020
+Chat ID bulundu: 7390678020
+Top 3 funding takibi basliyor...
+Taraniyor: 15 DAKIKALIK
+Traceback (most recent call last):
+  File "/app/coinbot.py", line 436, in <module>
+Exception in thread Thread-1 (watch_top3_funding):
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+    scan_timeframe("15m", "15 DAKIKALIK")
+  File "/app/coinbot.py", line 360, in scan_timeframe
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/coinbot.py", line 360, in <listcomp>
+    self.run()
+  File "/usr/local/lib/python3.11/threading.py", line 982, in run
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+                                   ~^^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+Chat ID bulundu: 7390678020
+Top 3 funding takibi basliyor...
+Taraniyor: 15 DAKIKALIK
+Traceback (most recent call last):
+  File "/app/coinbot.py", line 436, in <module>
+    scan_timeframe("15m", "15 DAKIKALIK")
+  File "/app/coinbot.py", line 360, in scan_timeframe
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/coinbot.py", line 360, in <listcomp>
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+                                   ~^^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+Chat ID bulundu: 7390678020
+Top 3 funding takibi basliyor...
+Taraniyor: 15 DAKIKALIK
+Traceback (most recent call last):
+  File "/app/coinbot.py", line 436, in <module>
+    scan_timeframe("15m", "15 DAKIKALIK")
+  File "/app/coinbot.py", line 360, in scan_timeframe
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/coinbot.py", line 360, in <listcomp>
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+                                   ~^^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+Chat ID bulundu: 7390678020
+Top 3 funding takibi basliyor...
+Taraniyor: 15 DAKIKALIK
+Traceback (most recent call last):
+  File "/app/coinbot.py", line 436, in <module>
+    scan_timeframe("15m", "15 DAKIKALIK")
+  File "/app/coinbot.py", line 360, in scan_timeframe
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/coinbot.py", line 360, in <listcomp>
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+                                   ~^^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+Exception in thread Thread-1 (watch_top3_funding):
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "/usr/local/lib/python3.11/threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+  File "/app/coinbot.py", line 402, in watch_top3_funding
+    top3 = get_top3_daily()
+           ^^^^^^^^^^^^^^^^
+  File "/app/coinbot.py", line 396, in get_top3_daily
+    filtered = [c for c in data if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 50000000]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/coinbot.py", line 396, in <listcomp>
+    filtered = [c for c in data if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 50000000]
+                                   ~^^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+Chat ID bulundu: 7390678020
+    top = [c for c in all_coins if c["symbol"].endswith("USDT") and float(c["quoteVolume"]) > 30000000]
+Top 3 funding takibi basliyor...
+                                   ~^^^^^^^^^^
+Taraniyor: 15 DAKIKALIK
