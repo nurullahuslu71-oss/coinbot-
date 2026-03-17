@@ -189,12 +189,8 @@ def mrd_signal(opens, highs, lows, closes, volumes):
     e50 = ema(closes, 50)
     m, s = macd(closes)
     cvd = get_cvd(closes, volumes)
-    current = closes[-1]
-    prev = closes[-2]
-
     long_score = 0
     short_score = 0
-
     if r < 35:
         long_score += 3
     elif r < 45:
@@ -203,7 +199,6 @@ def mrd_signal(opens, highs, lows, closes, volumes):
         short_score += 3
     elif r > 55:
         short_score += 1
-
     if sr < 20:
         long_score += 3
     elif sr < 30:
@@ -212,22 +207,18 @@ def mrd_signal(opens, highs, lows, closes, volumes):
         short_score += 3
     elif sr > 70:
         short_score += 1
-
     if e9 > e21 and e21 > e50:
         long_score += 2
     if e9 < e21 and e21 < e50:
         short_score += 2
-
     if m > s and m < 0:
         long_score += 2
     if m < s and m > 0:
         short_score += 2
-
     if cvd > 0:
         long_score += 2
     else:
         short_score += 2
-
     o, h, l, c = opens[-1], highs[-1], lows[-1], closes[-1]
     body = abs(c - o)
     lower_wick = min(o, c) - l
@@ -238,14 +229,12 @@ def mrd_signal(opens, highs, lows, closes, volumes):
             long_score += 2
         if upper_wick > body * 2 and c < o:
             short_score += 2
-
     avg_vol = sum(volumes[:-5]) / len(volumes[:-5])
     last_vol = volumes[-1]
     if last_vol > avg_vol * 1.5 and c > o:
         long_score += 2
     if last_vol > avg_vol * 1.5 and c < o:
         short_score += 2
-
     if long_score >= 7 and long_score > short_score:
         return "LONG", long_score
     elif short_score >= 7 and short_score > long_score:
@@ -257,27 +246,25 @@ def get_heatmap(closes, volumes):
     avg_vol = sum(volumes[-20:]) / 20
     last_vol = volumes[-1]
     vol_ratio = last_vol / avg_vol
-
     price_change = (closes[-1] - closes[-5]) / closes[-5] * 100
-
     if vol_ratio > 2 and price_change > 3:
-        return "🔥🔥🔥 COK SICAK"
+        return "COK SICAK"
     elif vol_ratio > 1.5 and price_change > 1:
-        return "🔥🔥 SICAK"
+        return "SICAK"
     elif vol_ratio > 1.2:
-        return "🔥 ILIMI"
+        return "ILIMI"
     elif price_change < -3:
-        return "🧊🧊 COK SOGUK"
+        return "COK SOGUK"
     else:
-        return "❄️ SOGUK"
+        return "SOGUK"
 
 def get_signal_color(score):
     if score >= 15:
-        return "🟢🚀"
+        return "GUCLU"
     elif score >= 10:
-        return "🟡"
+        return "ORTA"
     else:
-        return "🔴"
+        return "ZAYIF"
 
 def analyze_coin(symbol, interval):
     opens, highs, lows, closes, volumes = get_klines(symbol, interval)
@@ -299,10 +286,8 @@ def analyze_coin(symbol, interval):
     liq = get_liquidity(highs, lows, closes)
     mrd, mrd_score = mrd_signal(opens, highs, lows, closes, volumes)
     heatmap = get_heatmap(closes, volumes)
-
     score = 0
     reasons = []
-
     if r < 35:
         score += 4
         reasons.append("RSI asiri satim " + str(round(r, 1)))
@@ -351,20 +336,19 @@ def analyze_coin(symbol, interval):
         reasons.append("Destege yakin")
     if whale_buy > whale_sell * 1.5:
         score += 3
-        reasons.append("🐋 Balina alimi!")
+        reasons.append("Balina alimi!")
     if ob_ratio > 60:
         score += 2
         reasons.append("Order book alim agirlikli")
     if liq > 0 and liq < 5:
         score += 2
-        reasons.append("💧 Likidite bolgesi yakin")
+        reasons.append("Likidite bolgesi yakin")
     if mrd == "LONG":
         score += 3
         reasons.append("MrD LONG sinyali")
     for p in patterns:
         score += 1
         reasons.append(p)
-
     return score, reasons, round(r, 1), round(f, 4), round(oi, 1), round(potential, 1), round(vol, 1), mrd, heatmap
 
 def scan_timeframe(interval, label):
@@ -386,23 +370,22 @@ def scan_timeframe(interval, label):
     results = sorted(results, key=lambda x: x["Skor"], reverse=True)
     try:
         fg_val, fg_label = get_fear_greed()
-        fg_msg = "😱 Korku/Acgozluluk: " + str(fg_val) + " (" + fg_label + ")\n\n"
+        fg_msg = "Korku/Acgozluluk: " + str(fg_val) + " (" + fg_label + ")\n\n"
     except:
         fg_msg = ""
     if not results:
-        send("📊 " + label + " - Guclu LONG sinyali bulunamadi.\n" + fg_msg)
+        send(label + " - Guclu LONG sinyali bulunamadi.\n" + fg_msg)
         return
-    msg = "📊 " + label + " YUKSELECEK COINLER\n" + fg_msg
+    msg = label + " YUKSELECEK COINLER\n" + fg_msg
     for idx, res in enumerate(results[:5], 1):
         color = get_signal_color(res["Skor"])
-        mrd_tag = "✅ MrD LONG" if res["MrD"] == "LONG" else ""
         msg += color + " #" + str(idx) + " " + res["Coin"] + " | Skor: " + str(res["Skor"]) + "/33\n"
-        msg += "🌡️ " + res["Heatmap"] + "\n"
-        msg += mrd_tag + "\n"
+        msg += "Heatmap: " + res["Heatmap"] + "\n"
+        msg += "MrD: " + res["MrD"] + "\n"
         msg += "RSI: " + str(res["RSI"]) + " | Funding: " + str(res["Funding"]) + "%\n"
         msg += "OI: +" + str(res["OI"]) + "% | Hedef: +%" + str(res["Potential"]) + "\n"
         msg += ", ".join(res["Reasons"][:4]) + "\n\n"
-    msg += "⚠️ Yatirim tavsiyesi degildir!"
+    msg += "Yatirim tavsiyesi degildir!"
     send(msg)
 
 def get_top3_daily():
@@ -416,7 +399,7 @@ def get_top3_daily():
 def watch_top3_funding():
     print("Top 3 funding takibi basliyor...")
     top3 = get_top3_daily()
-    send("🏆 Gunun Top 3 Coini: " + ", ".join(top3) + "\n⚡ Dakikalik funding takibi basliyor!")
+    send("Gunun Top 3 Coini: " + ", ".join(top3) + " Dakikalik funding takibi basliyor!")
     prev_funding = {}
     while True:
         for symbol in top3:
@@ -424,9 +407,9 @@ def watch_top3_funding():
                 f = get_funding(symbol)
                 prev = prev_funding.get(symbol, 0)
                 if f < -0.01 and prev >= -0.01:
-                    send("🟢 FUNDING ALARM! " + symbol + "\nFunding negatife dondu: " + str(round(f, 4)) + "%\nYukselis sinyali!")
+                    send("FUNDING ALARM! " + symbol + " Funding negatife dondu: " + str(round(f, 4)) + "% Yukselis sinyali!")
                 elif f < prev - 0.02:
-                    send("🚀 FUNDING DUSIYOR! " + symbol + "\nFunding: " + str(round(f, 4)) + "%\nGuclu yukselis bekleniyor!")
+                    send("FUNDING DUSIYOR! " + symbol + " Funding: " + str(round(f, 4)) + "% Guclu yukselis bekleniyor!")
                 prev_funding[symbol] = f
             except:
                 continue
@@ -440,13 +423,10 @@ def get_chat_id():
         return str(data["result"][-1]["message"]["chat"]["id"])
     return None
 
-print("Telegram'da botunuza /start yazin, sonra Enter'a basin.")
-input("Hazir olunca Enter'a basin...")
 CHAT_ID = get_chat_id()
-
 if CHAT_ID:
     print("Chat ID bulundu: " + CHAT_ID)
-    send("✅ Bot aktif! MrD + Tum ozellikler yuklendi.\n🟢 Guclu sinyal\n🟡 Orta sinyal\n🔴 Zayif sinyal\n🔥 Likidite isi haritasi\n\nTarama basliyor...")
+    send("Bot aktif! Tarama basliyor...")
     t = threading.Thread(target=watch_top3_funding)
     t.daemon = True
     t.start()
@@ -461,3 +441,7 @@ if CHAT_ID:
         if counter % 6 == 0:
             scan_timeframe("1d", "GUNLUK")
         counter += 1
+        time.sleep(900)
+else:
+    print("Chat ID bulunamadi! Telegram'da bota /start yazin.")
+    time.sleep(30
