@@ -1,3 +1,5 @@
+
+
 import requests
 import time
 import threading
@@ -443,4 +445,4 @@ if CHAT_ID:
         time.sleep(900)
 else:
     print("Chat ID bulunamadi! Telegram'da bota /start yazin.")
-    time.sleep(30
+    time.sleep(30)
